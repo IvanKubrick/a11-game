@@ -27,8 +27,9 @@ function create() {
 
     // create the rocket
     rocket = game.add.sprite(375, game.world.height - 100, 'rocket');
+    rocket.anchor.setTo(0.5, 0.5);
     game.physics.arcade.enable(rocket);
-    rocket.body.bounce.y = 0.2;
+    rocket.body.bounce.y = 0;
     rocket.body.gravity.y = 2;
     rocket.body.collideWorldBounds = true;
 
@@ -40,21 +41,28 @@ function update() {
     game.physics.arcade.collide(rocket, ground);
 
     // reset rocket's speed
-    rocket.body.velocity.x = 0;
+    //rocket.body.velocity.x = 0;
 
-    if (cursors.up.isDown && cursors.left.isDown) {
-        rocket.body.velocity.y = -50;
-        rocket.body.velocity.x = -50;
-    } else if (cursors.up.isDown && cursors.right.isDown) {
-        rocket.body.velocity.y = -50;
-        rocket.body.velocity.x = 50;
-    } else if (cursors.up.isDown) {
-        rocket.body.velocity.y = -50;
-    } else if (cursors.left.isDown && !rocket.body.touching.down) {
+    // enable controls
+    if (cursors.up.isDown) {
+        if (rocket.body.velocity.y > -50) {
+            rocket.body.velocity.y -= 0.4;
+        }
+    } else if (cursors.down.isDown) {
+        if (rocket.body.velocity.y < 0) {
+            rocket.body.velocity.y += 0.4;
+        }
+    } else if (!cursors.up.isDown) {
+        if (rocket.body.velocity.y < 0) {
+            rocket.body.velocity.y += 0.05;
+        }
+    } 
+
+    if (cursors.left.isDown && !rocket.body.touching.down) {
         rocket.body.velocity.x = -50;
     } else if (cursors.right.isDown && !rocket.body.touching.down) {
         rocket.body.velocity.x = 50;
-    } else if (cursors.down.isDown) {
-        rocket.body.velocity.y = 0;
+    } else if (!cursors.left.isDown || !cursors.right.isDown || rocket.body.touching.down) {
+        rocket.body.velocity.x = 0;
     }
 }
