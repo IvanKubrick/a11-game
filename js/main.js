@@ -26,7 +26,7 @@ function create() {
     ground.body.immovable = true;
 
     // create the rocket
-    rocket = game.add.sprite(375, game.world.height - 100, 'rocket');
+    rocket = game.add.sprite(400, game.world.height - 75, 'rocket');
     rocket.anchor.setTo(0.5, 0.5);
     game.physics.arcade.enable(rocket);
     rocket.body.bounce.y = 0;
@@ -60,9 +60,22 @@ function update() {
 
     if (cursors.left.isDown && !rocket.body.touching.down) {
         rocket.body.velocity.x = -50;
+        if (rocket.angle > -45){
+            rocket.angle -= 5;
+        }
     } else if (cursors.right.isDown && !rocket.body.touching.down) {
         rocket.body.velocity.x = 50;
+        if (rocket.angle < 45){
+            rocket.angle += 5;
+        }
     } else if (!cursors.left.isDown || !cursors.right.isDown || rocket.body.touching.down) {
         rocket.body.velocity.x = 0;
+        //rocket.angle = 0;
+        if (rocket.angle < 0){
+            rocket.angle += 5;
+        }
+        if (rocket.angle > 0) {
+            rocket.angle -= 5;
+        }
     }
 }
