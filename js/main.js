@@ -12,39 +12,46 @@ function preload() {
 let rocket;
 let ground;
 let curcors;
+let scene;
 
 function create() {
     
     game.physics.startSystem(Phaser.Physics.ARCADE);
+    //game.world.scale.setTo(1.1);
     
     // add the background
     game.world.setBounds(0, 0, 1920, 1080);
-    game.add.sprite(0, 0, 'space');
+    let bg = game.add.sprite(0, 0, 'space');
+    //bg.scale.setTo(0.5)
 
-    // // create the ground
-    // ground = game.add.sprite(0, game.height - 50, 'ground');
-    // ground.scale.setTo(80, 5);
-    // game.physics.enable(ground, Phaser.Physics.ARCADE);
-    // ground.body.immovable = true;
-
+    
+    // create the ground
+    ground = game.add.sprite(0, game.world.height - 50, 'ground');
+    ground.scale.setTo(192, 5);
+    game.physics.enable(ground, Phaser.Physics.ARCADE);
+    ground.body.immovable = true;
+    
     // create the rocket
-    rocket = game.add.sprite(300, 300, 'rocket');
+    rocket = game.add.sprite(300, game.world.height - 75, 'rocket');
     rocket.anchor.set(0.5);
     game.physics.enable(rocket, Phaser.Physics.ARCADE);
-    rocket.body.drag.set(100);
-    rocket.body.maxVelocity.set(100);
+    rocket.body.drag.set(20);
+    rocket.body.maxVelocity.set(200);
     rocket.angle = -90;
-
+    rocket.body.collideWorldBounds = true;
+    
     // create controls
     cursors = game.input.keyboard.createCursorKeys();
 
     // camera following
     game.camera.follow(rocket);
+     
+    //scene = game.add.group();
 }
 function update() {
 
-    // // collision of the rocket with the ground
-    // game.physics.arcade.collide(rocket, ground);
+    // collision of the rocket with the ground
+    game.physics.arcade.collide(rocket, ground);
 
     // enable controls
     if (cursors.up.isDown) {
@@ -61,22 +68,9 @@ function update() {
         rocket.body.angularVelocity = 0;
     }
 
-    //screenWrap(rocket);
+    game.physics.arcade.velocityFromRotation( rocket.rotation, rocket.body.velocity.getMagnitude(), rocket.body.velocity );
 }
 
-function screenWrap (sprite) {   
-    if (rocket.x < 0) {
-        rocket.x = game.width;
-    } else if (rocket.x > game.width) {
-        rocket.x = 0;
-    }
-
-    if (rocket.y < 0) {
-        rocket.y = game.height;
-    } else if (rocket.y > game.height) {
-        rocket.y = 0;
-    }
-}
 
 function render() {
     
