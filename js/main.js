@@ -1,29 +1,26 @@
 const gameField = document.querySelector('.game-field');
 
 const game = new Phaser.Game(800, 600, Phaser.AUTO, gameField, {preload: preload, create: create, update: update, render: render});
-//const HEIGHT = game.world.height;
 
 function preload() {
     game.load.image('space', 'assets/space.jpg');
     game.load.image('ground', 'assets/ground.png');
     game.load.image('rocket', 'assets/rocket.png');
+    game.load.image('fuelBar', 'assets/fuelBar.png');
 }
 
 let rocket;
 let ground;
-let curcors;
-let scene;
+let cursors;
+let fuelBar;jghj
 
 function create() {
-    
+    // common game settings
     game.physics.startSystem(Phaser.Physics.ARCADE);
-    //game.world.scale.setTo(1.1);
+    game.world.setBounds(0, 0, 1920, 1080);
     
     // add the background
-    game.world.setBounds(0, 0, 1920, 1080);
-    let bg = game.add.sprite(0, 0, 'space');
-    //bg.scale.setTo(0.5)
-
+    game.add.sprite(0, 0, 'space');
     
     // create the ground
     ground = game.add.sprite(0, game.world.height - 50, 'ground');
@@ -36,7 +33,7 @@ function create() {
     rocket.anchor.set(0.5);
     game.physics.enable(rocket, Phaser.Physics.ARCADE);
     rocket.body.drag.set(20);
-    rocket.body.maxVelocity.set(200);
+    rocket.body.maxVelocity.set(300);
     rocket.angle = -90;
     rocket.body.collideWorldBounds = true;
     
@@ -45,8 +42,12 @@ function create() {
 
     // camera following
     game.camera.follow(rocket);
-     
-    //scene = game.add.group();
+
+    // create fuelBar
+    fuelBar = new FuelBar();
+    fuelBar.x = 0;
+    fuelBar.y = game.world.height - game.height;
+
 }
 function update() {
 
@@ -55,7 +56,7 @@ function update() {
 
     // enable controls
     if (cursors.up.isDown) {
-        game.physics.arcade.accelerationFromRotation(rocket.rotation, 50, rocket.body.acceleration);
+        game.physics.arcade.accelerationFromRotation(rocket.rotation, 100, rocket.body.acceleration);
     } else {
         rocket.body.acceleration.set(0);
     }
@@ -74,4 +75,12 @@ function update() {
 
 function render() {
     
+}
+
+class FuelBar extends Phaser.Group {
+    constructor() {
+        super(game);
+        let bar = this.create(0, 0, 'fuelBar');
+        bar.scale.setTo(30, 3);
+    }
 }
