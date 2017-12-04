@@ -7,12 +7,14 @@ function preload() {
     game.load.image('ground', 'assets/ground.png');
     game.load.image('rocket', 'assets/rocket.png');
     game.load.image('fuelBar', 'assets/fuelBar.png');
+    game.load.image('fuelCan', 'assets/fuelCan.png');
 }
 
 let rocket;
 let ground;
 let cursors;
-let fuelBar;jghj
+let fuelBar;
+let fuelCans;
 
 function create() {
     // common game settings
@@ -32,7 +34,7 @@ function create() {
     rocket = game.add.sprite(300, game.world.height - 75, 'rocket');
     rocket.anchor.set(0.5);
     game.physics.enable(rocket, Phaser.Physics.ARCADE);
-    rocket.body.drag.set(20);
+    rocket.body.drag.set(35);
     rocket.body.maxVelocity.set(300);
     rocket.angle = -90;
     rocket.body.collideWorldBounds = true;
@@ -43,11 +45,18 @@ function create() {
     // camera following
     game.camera.follow(rocket);
 
-    // create fuelBar
+    // create the fuelBar
     fuelBar = new FuelBar();
     fuelBar.x = 0;
-    fuelBar.y = game.world.height - game.height;
+    fuelBar.y = 0;  
+    fuelBar.fixedToCamera = true;
 
+    // add fuel cans on the map 
+    fuelCans = game.add.group();
+    fuelCans.enableBody = true;
+    for (let i = 0; i < 20; i++ ) {
+        fuelCans.create( Math.random() * 1920, Math.random() * 800, 'fuelCan' );
+    }
 }
 function update() {
 
@@ -56,7 +65,11 @@ function update() {
 
     // enable controls
     if (cursors.up.isDown) {
+        if (fuelBar.fuelAmount <= 0) {
+            return;
+        }
         game.physics.arcade.accelerationFromRotation(rocket.rotation, 100, rocket.body.acceleration);
+        fuelBar.decreaseFuel();
     } else {
         rocket.body.acceleration.set(0);
     }
@@ -70,8 +83,16 @@ function update() {
     }
 
     game.physics.arcade.velocityFromRotation( rocket.rotation, rocket.body.velocity.getMagnitude(), rocket.body.velocity );
+
+    // collecting of fuelCans
+    game.physics.arcade.overlap(rocket, fuelCans, collectFuel, null, this);
 }
 
+function collectFuel(rocket, fuelCan) {
+    fuelBar.fuelAmount += 10;
+    fuelBar.increaseFuel();
+    fuelCan.kill();
+}
 
 function render() {
     
@@ -80,7 +101,18 @@ function render() {
 class FuelBar extends Phaser.Group {
     constructor() {
         super(game);
-        let bar = this.create(0, 0, 'fuelBar');
-        bar.scale.setTo(30, 3);
+        this.bar = this.create(0, 0, 'fuelBar');
+        this.fuelAmount = 80;
+        this.bar.scale.setTo(this.fuelAmount, 3);
     }
+    decreaseFuel(){
+        this.fuelAmount -= 0.2;
+        this.bar.scale.setTo(this.fuelAmount, 3);
+    } increaseFuel(){
+        this.fuelAmount += 5;
+        if (this.fuelAmount > 80) {
+            this.fuelAmount = 80;
+        }
+        this.bar.scale.setTo(this.fuelAmount, 3);
+    }  
 }
