@@ -8,6 +8,7 @@ function preload() {
     game.load.image('rocket', 'assets/rocket.png');
     game.load.image('fuelBar', 'assets/fuelBar.png');
     game.load.image('fuelCan', 'assets/fuelCan.png');
+    game.load.image('asteroid', 'assets/asteroid.png');
 }
 
 let rocket;
@@ -15,6 +16,7 @@ let ground;
 let cursors;
 let fuelBar;
 let fuelCans;
+let asteroids;
 
 function create() {
     // common game settings
@@ -56,6 +58,14 @@ function create() {
     fuelCans.enableBody = true;
     for (let i = 0; i < 20; i++ ) {
         fuelCans.create( Math.random() * 1920, Math.random() * 800, 'fuelCan' );
+    }
+
+    // add asteroids on the map 
+    asteroids = game.add.group();
+    asteroids.enableBody = true;
+    for (let i = 0; i < 10; i++ ) {
+        let asteroid = asteroids.create( Math.random() * 1920, Math.random() * 800, 'asteroid' );
+        asteroid.scale.setTo( 0.5 + Math.random() );
     }
 }
 function update() {
