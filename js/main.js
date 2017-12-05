@@ -63,15 +63,18 @@ function create() {
     // add asteroids on the map 
     asteroids = game.add.group();
     asteroids.enableBody = true;
+
     for (let i = 0; i < 10; i++ ) {
         let asteroid = asteroids.create( Math.random() * 1920, Math.random() * 800, 'asteroid' );
         asteroid.scale.setTo( 0.5 + Math.random() );
+        asteroid.body.immovable = true;
     }
 }
 function update() {
 
-    // collision of the rocket with the ground
+    // collisions
     game.physics.arcade.collide(rocket, ground);
+    game.physics.arcade.collide(rocket, asteroids);
 
     // enable controls
     if (cursors.up.isDown) {
