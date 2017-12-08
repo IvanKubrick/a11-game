@@ -53,21 +53,21 @@ function create() {
     fuelBar.y = 0;  
     fuelBar.fixedToCamera = true;
 
-    // add fuel cans on the map 
-    fuelCans = game.add.group();
-    fuelCans.enableBody = true;
-    for (let i = 0; i < 20; i++ ) {
-        fuelCans.create( Math.random() * 1920, Math.random() * 800, 'fuelCan' );
-    }
-
     // add asteroids on the map 
     asteroids = game.add.group();
     asteroids.enableBody = true;
 
     for (let i = 0; i < 10; i++ ) {
-        let asteroid = asteroids.create( Math.random() * 1920, Math.random() * 800, 'asteroid' );
+        let asteroid = asteroids.create( game.world.randomX, game.world.randomY - 200, 'asteroid' );
         asteroid.scale.setTo( 0.5 + Math.random() );
-        asteroid.body.immovable = true;
+    }
+    asteroids.setAll('body.immovable', true);
+
+    // add fuel cans on the map 
+    fuelCans = game.add.group();
+    fuelCans.enableBody = true;
+    for (let i = 0; i < 20; i++ ) {
+        fuelCans.create( game.world.randomX, game.world.randomY - 150, 'fuelCan' );
     }
 }
 function update() {
