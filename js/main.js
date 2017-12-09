@@ -40,6 +40,8 @@ function create() {
     rocket.body.maxVelocity.set(300);
     rocket.angle = -90;
     rocket.body.collideWorldBounds = true;
+    rocket.body.setCircle(10, 15, 15);
+    //rocket.body.bounce.set(1);
     
     // create controls
     cursors = game.input.keyboard.createCursorKeys();
@@ -59,7 +61,9 @@ function create() {
 
     for (let i = 0; i < 10; i++ ) {
         let asteroid = asteroids.create( game.world.randomX, game.world.randomY - 200, 'asteroid' );
-        asteroid.scale.setTo( 0.5 + Math.random() );
+        let size = 0.5 + Math.random();
+        asteroid.body.setCircle(35, 0, 0);
+        asteroid.scale.setTo(size);
     }
     asteroids.setAll('body.immovable', true);
 
@@ -67,8 +71,10 @@ function create() {
     fuelCans = game.add.group();
     fuelCans.enableBody = true;
     for (let i = 0; i < 20; i++ ) {
-        fuelCans.create( game.world.randomX, game.world.randomY - 150, 'fuelCan' );
+        let can = fuelCans.create( game.world.randomX, game.world.randomY - 150, 'fuelCan' );
+        can.body.setSize(40, 50, -6, -5);
     }
+    //fuelCans.callAll('')
 }
 function update() {
 
@@ -77,14 +83,14 @@ function update() {
     game.physics.arcade.collide(rocket, asteroids);
 
     // enable controls
-    if (cursors.up.isDown) {
-        if (fuelBar.fuelAmount <= 0) {
-            return;
+    rocket.body.acceleration.set(0);
+    rocket.body.angularVelocity = 0;
+
+    if (fuelBar.fuelAmount > 0) {
+        if (cursors.up.isDown) {
+            game.physics.arcade.accelerationFromRotation(rocket.rotation, 100, rocket.body.acceleration);
+            fuelBar.decreaseFuel();
         }
-        game.physics.arcade.accelerationFromRotation(rocket.rotation, 100, rocket.body.acceleration);
-        fuelBar.decreaseFuel();
-    } else {
-        rocket.body.acceleration.set(0);
     }
 
     if (cursors.left.isDown) {
@@ -97,6 +103,29 @@ function update() {
 
     game.physics.arcade.velocityFromRotation( rocket.rotation, rocket.body.velocity.getMagnitude(), rocket.body.velocity );
 
+
+    // // enable controls
+    // if (cursors.up.isDown) {
+    //     if (fuelBar.fuelAmount <= 0) {
+    //         return;
+    //     }
+    //     game.physics.arcade.accelerationFromRotation(rocket.rotation, 100, rocket.body.acceleration);
+    //     fuelBar.decreaseFuel();
+    // } else {
+    //     rocket.body.acceleration.set(0);
+    // }
+
+    // if (cursors.left.isDown) {
+    //     rocket.body.angularVelocity = -100;
+    // } else if (cursors.right.isDown) {
+    //     rocket.body.angularVelocity = 100;
+    // } else {
+    //     rocket.body.angularVelocity = 0;
+    // }
+
+    // game.physics.arcade.velocityFromRotation( rocket.rotation, rocket.body.velocity.getMagnitude(), rocket.body.velocity );
+
+
     // collecting of fuelCans
     game.physics.arcade.overlap(rocket, fuelCans, collectFuel, null, this);
 }
@@ -108,7 +137,9 @@ function collectFuel(rocket, fuelCan) {
 }
 
 function render() {
-    
+    game.debug.body(rocket);
+    asteroids.children.forEach( asteroid => game.debug.body(asteroid));
+    fuelCans.children.forEach( fuelCan => game.debug.body(fuelCan));
 }
 
 class FuelBar extends Phaser.Group {
@@ -118,10 +149,11 @@ class FuelBar extends Phaser.Group {
         this.fuelAmount = 80;
         this.bar.scale.setTo(this.fuelAmount, 3);
     }
-    decreaseFuel(){
+    decreaseFuel() {
         this.fuelAmount -= 0.2;
         this.bar.scale.setTo(this.fuelAmount, 3);
-    } increaseFuel(){
+    } 
+    increaseFuel() {
         this.fuelAmount += 5;
         if (this.fuelAmount > 80) {
             this.fuelAmount = 80;
