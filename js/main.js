@@ -18,6 +18,7 @@ function preload() {
     game.load.image('fuelBar', 'assets/img/fuelBar.png');
     game.load.image('fuelCan', 'assets/img/fuelCan.png');
     game.load.image('asteroid', 'assets/img/asteroid.png');
+    game.load.image('clouds', 'assets/img/clouds.png');
 }
 
 let rocket;
@@ -79,6 +80,12 @@ function create() {
         let fuelCan = fuelCans.create( game.world.randomX, game.world.randomY - 200, 'fuelCan' );
         fuelCan.body.setSize(46, 58, -9, -9);
     }
+
+    // create clouds
+    const clouds = game.add.tileSprite(0, game.world.height - CONFIGS.skyHeight, game.world.width, 100, 'clouds');
+    clouds.scale.setTo(2);
+    clouds.anchor.set(0.5);
+    
 
     // create the fuelBar
     fuelBar = new FuelBar();
