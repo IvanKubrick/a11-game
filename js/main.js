@@ -14,7 +14,7 @@ function preload() {
     game.load.image('sky', 'assets/img/sky.jpg');
     game.load.image('space', 'assets/img/space.jpg');
     game.load.image('ground', 'assets/img/ground.png');
-    game.load.image('rocket', 'assets/img/rocket.png');
+    game.load.spritesheet('rocket', 'assets/img/rocket-spritesheet.png', 50, 50);
     game.load.image('fuelBar', 'assets/img/fuelBar.png');
     game.load.image('fuelCan', 'assets/img/fuelCan.png');
     game.load.image('asteroid', 'assets/img/asteroid.png');
@@ -50,6 +50,9 @@ function create() {
     rocket.angle = -90;
     rocket.body.collideWorldBounds = true;
     rocket.body.setCircle(10, 15, 15);
+
+    // create animation for the rocket
+    rocket.animations.add('move', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], 12, true);
     
     // create controls
     cursors = game.input.keyboard.createCursorKeys();
@@ -85,6 +88,9 @@ function create() {
 }
 function update() {
 
+    // animation
+    rocket.animations.play('move');
+
     // collisions
     game.physics.arcade.collide(rocket, ground);
     game.physics.arcade.collide(rocket, asteroids);
@@ -95,7 +101,7 @@ function update() {
 
     if (fuelBar.fuelAmount > 0) {
         if (cursors.up.isDown) {
-            game.physics.arcade.accelerationFromRotation(rocket.rotation, 100, rocket.body.acceleration);
+            game.physics.arcade.accelerationFromRotation(rocket.rotation, 150, rocket.body.acceleration);
             fuelBar.decreaseFuel();
         }
     }
@@ -103,7 +109,7 @@ function update() {
     if (cursors.left.isDown) {
         rocket.body.angularVelocity = -100;
     } else if (cursors.right.isDown) {
-        rocket.body.angularVelocity = 100;
+        rocket.body.angularVelocity = 100; 
     } else {
         rocket.body.angularVelocity = 0;
     }
