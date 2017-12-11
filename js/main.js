@@ -1,6 +1,7 @@
 const CONFIGS = {
+    planetDistance: 1000,
     mapWidth: 2000,
-    mapHeight: 4000,
+    mapHeight: 12000,
     skyHeight: 1000,
     groundHeight: 50,
     rocketMaxVelocity: 300
@@ -19,6 +20,17 @@ function preload() {
     game.load.image('fuelBar', 'assets/img/fuelBar.png');
     game.load.image('fuelCan', 'assets/img/fuelCan.png');
     game.load.image('clouds', 'assets/img/clouds.png');
+
+    game.load.image('mercury', 'assets/img/planets/1-mercury.png');
+    game.load.image('venus', 'assets/img/planets/2-venus.png');
+    game.load.image('mars', 'assets/img/planets/3-mars.png');
+    game.load.image('jupiter', 'assets/img/planets/4-jupiter.png');
+    game.load.image('saturn', 'assets/img/planets/5-saturn.png');
+    game.load.image('uranus', 'assets/img/planets/6-uranus.png');
+    game.load.image('neptune', 'assets/img/planets/7-neptune.png');
+    game.load.image('pluto', 'assets/img/planets/8-pluto.png');
+    game.load.image('sun', 'assets/img/planets/9-sun.png');
+    game.load.image('moon', 'assets/img/planets/10-moon.png');
 }
 
 let rocket;
@@ -27,7 +39,6 @@ let cursors;
 let fuelBar;
 let fuelCans;
 let asteroids;
-let collision;
 
 function create() {
     // common game settings
@@ -37,6 +48,18 @@ function create() {
     // add the background
     game.add.tileSprite(0, 0, game.world.width, game.world.height, 'sky');
     game.add.tileSprite(0, 0, game.world.width, game.world.height - CONFIGS.skyHeight, 'space');
+
+    // add planets
+    game.add.sprite(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 2 * CONFIGS.planetDistance, 'mercury');
+    game.add.sprite(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 3 * CONFIGS.planetDistance, 'venus');
+    game.add.sprite(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 4 * CONFIGS.planetDistance, 'mars');
+    game.add.sprite(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 5 * CONFIGS.planetDistance, 'jupiter');
+    game.add.sprite(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 6 * CONFIGS.planetDistance, 'saturn');
+    game.add.sprite(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 7 * CONFIGS.planetDistance, 'uranus');
+    game.add.sprite(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 8 * CONFIGS.planetDistance, 'neptune');
+    game.add.sprite(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 9 * CONFIGS.planetDistance, 'pluto');
+    game.add.sprite(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 10 * CONFIGS.planetDistance, 'sun');
+    game.add.sprite(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 11 * CONFIGS.planetDistance, 'moon');
     
     // create the ground
     ground = game.add.tileSprite(0, game.world.height - CONFIGS.groundHeight, game.world.width, CONFIGS.groundHeight, 'ground');
@@ -44,7 +67,7 @@ function create() {
     ground.body.immovable = true;
     
     // create the rocket
-    rocket = game.add.sprite(300, game.world.height - 75, 'rocket');
+    rocket = game.add.sprite(CONFIGS.mapWidth / 2, game.world.height - 75, 'rocket');
     rocket.anchor.set(0.5);
     game.physics.enable(rocket, Phaser.Physics.ARCADE);
     rocket.body.drag.set(35);
@@ -63,8 +86,7 @@ function create() {
     // add asteroids on the map 
     asteroids = game.add.group();
     asteroids.enableBody = true;
-
-    for (let i = 0; i < 20; i++ ) {
+    for (let i = 0; i < 100; i++ ) {
         let asteroid = asteroids.create( game.world.randomX, game.world.randomY - (CONFIGS.skyHeight + 100), 'asteroid' );
         let size = 0.5 + Math.random();
         asteroid.body.setCircle(30, 7, 8);
@@ -72,12 +94,11 @@ function create() {
         asteroid.animations.add('spin', makeArray(48), 8, true);
         asteroid.animations.play('spin');
     }
-    asteroids.setAll('body.immovable', true);
 
     // add fuel cans on the map 
     fuelCans = game.add.group();
     fuelCans.enableBody = true;
-    for (let i = 0; i < 40; i++ ) {
+    for (let i = 0; i < 300; i++ ) {
         let fuelCan = fuelCans.create( game.world.randomX, game.world.randomY - 100, 'fuelCan' );
         fuelCan.body.setSize(46, 58, -9, -9);
     }
@@ -87,7 +108,6 @@ function create() {
     clouds.scale.setTo(2);
     clouds.anchor.set(0.5);
     
-
     // create the fuelBar
     fuelBar = new FuelBar();
     fuelBar.x = 0;
@@ -98,10 +118,10 @@ function update() {
 
     // animations
     rocket.animations.play('move');
+   
 
     // collisions
     game.physics.arcade.collide(rocket, ground);
-    collision = game.physics.arcade.collide(rocket, asteroids);
 
     // enable controls
     rocket.body.acceleration.set(0);
@@ -110,7 +130,7 @@ function update() {
     if (fuelBar.fuelAmount > 0) {
         if (cursors.up.isDown) {
             game.physics.arcade.accelerationFromRotation(rocket.rotation, 150, rocket.body.acceleration);
-            fuelBar.decreaseFuel();
+            fuelBar.decreaseFuel(0.2);
         }
     }
 
@@ -126,11 +146,16 @@ function update() {
 
     // collecting of fuelCans
     game.physics.arcade.overlap(rocket, fuelCans, collectFuel, null, this);
+    game.physics.arcade.overlap(rocket, asteroids, destroyAsteroid, null, this);
 }
 
 function collectFuel(rocket, fuelCan) {
     fuelBar.increaseFuel();
     fuelCan.kill();
+}
+function destroyAsteroid(rocket, asteroid) {
+    fuelBar.decreaseFuel(10);
+    asteroid.destroy();
 }
 
 function render() {
@@ -146,8 +171,8 @@ class FuelBar extends Phaser.Group {
         this.fuelAmount = 80;
         this.bar.scale.setTo(this.fuelAmount, 3);
     }
-    decreaseFuel() {
-        this.fuelAmount -= 0.2;
+    decreaseFuel(n) {
+        this.fuelAmount -= n;
         this.bar.scale.setTo(this.fuelAmount, 3);
     } 
     increaseFuel() {
