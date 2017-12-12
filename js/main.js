@@ -137,12 +137,14 @@ function create() {
 }
 
 function update() {
-    window.console.log(rocket.body.velocity.getMagnitude());
+
     // animations
-    if (rocket.body.velocity.getMagnitude() > 50) {
-        rocket.animations.play('rotation');
-    }
     clouds.x += 0.4;
+
+    rocket.animations.play('rotation');
+    if (rocket.body.velocity.getMagnitude() < 50) {
+        rocket.animations.stop('rotation');
+    }
 
    
     // collisions
