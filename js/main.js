@@ -101,6 +101,7 @@ function create() {
         let size = 0.5 + Math.random();
         asteroid.body.setCircle(25, 51, 51);
         asteroid.scale.setTo(size);
+        asteroid.destroyed = false;
         asteroid.animations.add('rotation', makeArray(48), 8, true);
         asteroid.animations.add('explosion', [49, 50, 51, 52, 53, 54, 55, 56, 57, 58], 8, false);
         asteroid.animations.play('rotation');
@@ -173,12 +174,17 @@ function collectFuel(rocket, fuelCan) {
     fuelCan.destroy();
 }
 function destroyAsteroid(rocket, asteroid) {
+
     explosionSound.play('', 0, 0.3);
-    fuelBar.decreaseFuel(10);
+    window.console.log(asteroid.destroyed);
+    if (asteroid.destroyed === false) {
+        fuelBar.decreaseFuel(10);
+        asteroid.destroyed = true;
+    } 
+    window.console.log(asteroid.destroyed);
     asteroid.animations.play('explosion');
-    asteroids.remove(asteroid);
     setTimeout(() => {
-        asteroid.kill();
+        asteroid.destroy();
     }, 700); 
 }
 
@@ -197,6 +203,9 @@ class FuelBar extends Phaser.Group {
     }
     decreaseFuel(n) {
         this.fuelAmount -= n;
+        if (this.fuelAmount < 0) {
+            this.fuelAmount = 0;
+        }
         this.bar.scale.setTo(this.fuelAmount, 2);
     } 
     increaseFuel() {
