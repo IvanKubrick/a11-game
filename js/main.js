@@ -12,11 +12,15 @@ const gameField = document.querySelector('.game-field');
 const game = new Phaser.Game(800, 600, Phaser.AUTO, gameField, {preload: preload, create: create, update: update, render: render});
 
 function preload() {
+    game.load.audio('accelerationSound', 'assets/audio/acceleration.wav');
+    game.load.audio('explosionSound', 'assets/audio/explosion.mp3');
+    game.load.audio('fuelCollectionSound', 'assets/audio/fuelCollection.mp3');
+
     game.load.image('sky', 'assets/img/sky.jpg');
     game.load.image('space', 'assets/img/space.jpg');
     game.load.image('ground', 'assets/img/ground.png');
     game.load.spritesheet('rocket', 'assets/img/rocket-spritesheet.png', 50, 50);
-    game.load.spritesheet('asteroid', 'assets/img/asteroid-spritesheet.png', 75, 75);
+    game.load.spritesheet('asteroid', 'assets/img/asteroid-spritesheet.png', 150, 150);
     game.load.image('fuelBar', 'assets/img/fuelBar.png');
     game.load.image('fuelCan', 'assets/img/fuelCan.png');
     game.load.image('clouds', 'assets/img/clouds.png');
@@ -39,6 +43,12 @@ let cursors;
 let fuelBar;
 let fuelCans;
 let asteroids;
+let clouds;
+
+let accelerationSound;
+let fuelCollectionSound;
+let explosionSound;
+
 
 function create() {
     // common game settings
@@ -75,7 +85,7 @@ function create() {
     rocket.angle = -90;
     rocket.body.collideWorldBounds = true;
     rocket.body.setCircle(10, 15, 15);
-    rocket.animations.add('move', makeArray(16), 12, true);
+    rocket.animations.add('rotation', makeArray(16), 12, true);
     
     // create controls
     cursors = game.input.keyboard.createCursorKeys();
@@ -89,10 +99,12 @@ function create() {
     for (let i = 0; i < 100; i++ ) {
         let asteroid = asteroids.create( game.world.randomX, game.world.randomY - (CONFIGS.skyHeight + 100), 'asteroid' );
         let size = 0.5 + Math.random();
-        asteroid.body.setCircle(30, 7, 8);
+        asteroid.body.setCircle(25, 51, 51);
         asteroid.scale.setTo(size);
-        asteroid.animations.add('spin', makeArray(48), 8, true);
-        asteroid.animations.play('spin');
+        asteroid.animations.add('rotation', makeArray(48), 8, true);
+        asteroid.animations.add('explosion', [49, 50, 51, 52, 53, 54, 55, 56, 57, 58], 8, false);
+        asteroid.animations.play('rotation');
+        //asteroid.body.gravity.y = 10;
     }
 
     // add fuel cans on the map 
@@ -104,7 +116,7 @@ function create() {
     }
 
     // create clouds
-    const clouds = game.add.tileSprite(0, game.world.height - CONFIGS.skyHeight, game.world.width, 100, 'clouds');
+    clouds = game.add.tileSprite(0, game.world.height - CONFIGS.skyHeight, game.world.width, 100, 'clouds');
     clouds.scale.setTo(2);
     clouds.anchor.set(0.5);
     
@@ -113,13 +125,18 @@ function create() {
     fuelBar.x = 0;
     fuelBar.y = 0;  
     fuelBar.fixedToCamera = true;
+
+    // sounds
+    fuelCollectionSound = game.add.audio('fuelCollectionSound');
+    explosionSound = game.add.audio('explosionSound');
+    accelerationSound = game.add.audio('accelerationSound');
 }
 function update() {
 
     // animations
-    rocket.animations.play('move');
+    rocket.animations.play('rotation');
+    clouds.x += 0.3;
    
-
     // collisions
     game.physics.arcade.collide(rocket, ground);
 
@@ -131,6 +148,7 @@ function update() {
         if (cursors.up.isDown) {
             game.physics.arcade.accelerationFromRotation(rocket.rotation, 150, rocket.body.acceleration);
             fuelBar.decreaseFuel(0.2);
+            //accelerationSound.play('', 0, 1);
         }
     }
 
@@ -144,24 +162,30 @@ function update() {
 
     game.physics.arcade.velocityFromRotation( rocket.rotation, rocket.body.velocity.getMagnitude(), rocket.body.velocity );
 
-    // collecting of fuelCans
+    // overlapping
     game.physics.arcade.overlap(rocket, fuelCans, collectFuel, null, this);
     game.physics.arcade.overlap(rocket, asteroids, destroyAsteroid, null, this);
 }
 
 function collectFuel(rocket, fuelCan) {
+    fuelCollectionSound.play('', 0, 0.3);
     fuelBar.increaseFuel();
-    fuelCan.kill();
+    fuelCan.destroy();
 }
 function destroyAsteroid(rocket, asteroid) {
+    explosionSound.play('', 0, 0.3);
     fuelBar.decreaseFuel(10);
-    asteroid.destroy();
+    asteroid.animations.play('explosion');
+    asteroids.remove(asteroid);
+    setTimeout(() => {
+        asteroid.kill();
+    }, 700); 
 }
 
 function render() {
-    // game.debug.body(rocket);
-    // asteroids.children.forEach( asteroid => game.debug.body(asteroid));
-    // fuelCans.children.forEach( fuelCan => game.debug.body(fuelCan));
+    game.debug.body(rocket);
+    asteroids.children.forEach( asteroid => game.debug.body(asteroid));
+    fuelCans.children.forEach( fuelCan => game.debug.body(fuelCan));
 }
 
 class FuelBar extends Phaser.Group {
@@ -169,18 +193,18 @@ class FuelBar extends Phaser.Group {
         super(game);
         this.bar = this.create(0, 0, 'fuelBar');
         this.fuelAmount = 80;
-        this.bar.scale.setTo(this.fuelAmount, 3);
+        this.bar.scale.setTo(this.fuelAmount, 2);
     }
     decreaseFuel(n) {
         this.fuelAmount -= n;
-        this.bar.scale.setTo(this.fuelAmount, 3);
+        this.bar.scale.setTo(this.fuelAmount, 2);
     } 
     increaseFuel() {
         this.fuelAmount += 10;
         if (this.fuelAmount > 80) {
             this.fuelAmount = 80;
         }
-        this.bar.scale.setTo(this.fuelAmount, 3);
+        this.bar.scale.setTo(this.fuelAmount, 2);
     }  
 }
 function makeArray(n) {
