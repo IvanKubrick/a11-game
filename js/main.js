@@ -5,7 +5,8 @@ const CONFIGS = {
     skyHeight: 1000,
     groundHeight: 50,
     rocketMaxVelocity: 300,
-    fuelIncreaseAmount: 10
+    fuelIncreaseAmount: 10,
+    cloudsSpeed: 0.4
 };
 
 const gameField = document.querySelector('.game-field');
@@ -120,7 +121,7 @@ function create() {
     }
 
     // clouds
-    clouds = game.add.tileSprite(0, game.world.height - CONFIGS.skyHeight, game.world.width, 100, 'clouds');
+    clouds = game.add.tileSprite(0, CONFIGS.mapHeight - CONFIGS.skyHeight, CONFIGS.mapWidth, 100, 'clouds');
     clouds.scale.setTo(2);
     clouds.anchor.set(0.5);
     
@@ -139,14 +140,17 @@ function create() {
 function update() {
 
     // animations
-    clouds.x += 0.4;
+    console.log(clouds.x);
+    clouds.x += CONFIGS.cloudsSpeed;
+    if (clouds.x > 1000 || clouds.x < -1000) {
+        CONFIGS.cloudsSpeed = - CONFIGS.cloudsSpeed;
+    }
 
     rocket.animations.play('rotation');
     if (rocket.body.velocity.getMagnitude() < 50) {
         rocket.animations.stop('rotation');
     }
 
-   
     // collisions
     game.physics.arcade.collide(rocket, ground);
 
@@ -185,12 +189,10 @@ function collectFuel(rocket, fuelCan) {
 function destroyAsteroid(rocket, asteroid) {
 
     explosionSound.play('', 0, 0.3);
-    window.console.log(asteroid.destroyed);
     if (asteroid.destroyed === false) {
         fuelBar.decreaseFuel(10);
         asteroid.destroyed = true;
     } 
-    window.console.log(asteroid.destroyed);
     asteroid.animations.play('explosion');
     setTimeout(() => {
         asteroid.destroy();
