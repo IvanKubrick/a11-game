@@ -17,6 +17,7 @@ function preload() {
     game.load.audio('explosionSound', 'assets/audio/explosion.mp3');
     game.load.audio('fuelCollectionSound', 'assets/audio/fuelCollection.mp3');
     game.load.audio('setFlagSound', 'assets/audio/setFlag.wav');
+    game.load.audio('applauseSound', 'assets/audio/applause.mp3');
 
     game.load.image('sky', 'assets/img/sky.jpg');
     game.load.image('space', 'assets/img/space.jpg');
@@ -57,6 +58,7 @@ let timer;
 let fuelCollectionSound;
 let explosionSound;
 let setFlagSound;
+let applauseSound;
 
 
 
@@ -80,7 +82,6 @@ function create() {
     planets.create(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 8 * CONFIGS.planetDistance, 'neptune');
     planets.create(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 9 * CONFIGS.planetDistance, 'pluto');
     planets.create(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 10 * CONFIGS.planetDistance, 'sun');
-    planets.scale.set(2, 2);
     
     // moon
     moon = game.add.sprite(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 11 * CONFIGS.planetDistance, 'moon');
@@ -111,6 +112,7 @@ function create() {
     rocket.body.setCircle(10, 15, 15);
     rocket.animations.add('rotation', makeArray(16), 12, true);
     rocket.reachedMoon = false;
+    rocket.gotBack = false;
     
     // controls
     cursors = game.input.keyboard.createCursorKeys();
@@ -158,6 +160,7 @@ function create() {
     fuelCollectionSound = game.add.audio('fuelCollectionSound');
     explosionSound = game.add.audio('explosionSound');
     setFlagSound = game.add.audio('setFlagSound');
+    applauseSound = game.add.audio('applauseSound');
 
     // timer
     const timerStyle = {
@@ -192,8 +195,15 @@ function update() {
         rocket.animations.stop('rotation');
     }
 
-    // collisions
-    game.physics.arcade.collide(rocket, ground);
+    // collision with the ground
+    let collisionWithGround = game.physics.arcade.collide(rocket, ground);
+    if (collisionWithGround) {
+        if (rocket.reachedMoon === true && rocket.gotBack === false) {
+            applauseSound.play('', 0, 0.3);
+            reachEarth.addColor('green', 0);
+            rocket.gotBack = true;
+        }
+    }
 
     // enable controls
     rocket.body.acceleration.set(0);
