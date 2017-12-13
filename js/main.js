@@ -40,6 +40,7 @@ function preload() {
     game.load.image('moon', 'assets/img/planets/10-moon.png');
 }
 
+let planets;
 let rocket;
 let ground;
 let cursors;
@@ -48,6 +49,8 @@ let fuelCans;
 let asteroids;
 let clouds;
 let timer;
+let reachMoon;
+let reachEarth;
 let moon;
 let flag;
 
@@ -66,27 +69,31 @@ function create() {
     game.add.tileSprite(0, 0, game.world.width, game.world.height - CONFIGS.skyHeight, 'space');
 
     // planets
-    game.add.sprite(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 2 * CONFIGS.planetDistance, 'mercury');
-    game.add.sprite(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 3 * CONFIGS.planetDistance, 'venus');
-    game.add.sprite(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 4 * CONFIGS.planetDistance, 'mars');
-    game.add.sprite(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 5 * CONFIGS.planetDistance, 'jupiter');
-    game.add.sprite(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 6 * CONFIGS.planetDistance, 'saturn');
-    game.add.sprite(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 7 * CONFIGS.planetDistance, 'uranus');
-    game.add.sprite(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 8 * CONFIGS.planetDistance, 'neptune');
-    game.add.sprite(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 9 * CONFIGS.planetDistance, 'pluto');
-    game.add.sprite(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 10 * CONFIGS.planetDistance, 'sun');
+    planets = game.add.group();
+    planets.create(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 2 * CONFIGS.planetDistance, 'mercury');
+    planets.create(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 3 * CONFIGS.planetDistance, 'venus');
+    planets.create(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 4 * CONFIGS.planetDistance, 'mars');
+    planets.create(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 5 * CONFIGS.planetDistance, 'jupiter');
+    planets.create(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 6 * CONFIGS.planetDistance, 'saturn');
+    planets.create(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 7 * CONFIGS.planetDistance, 'uranus');
+    planets.create(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 8 * CONFIGS.planetDistance, 'neptune');
+    planets.create(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 9 * CONFIGS.planetDistance, 'pluto');
+    planets.create(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 10 * CONFIGS.planetDistance, 'sun');
+    //planets.scale.setTo(2, 2);
     
-    moon = game.add.sprite(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 0.5 * CONFIGS.planetDistance, 'moon');
+    // moon
+    moon = game.add.sprite(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 11 * CONFIGS.planetDistance, 'moon');
     moon.anchor.set(0.5);
-    //moon.scale.setTo(1.5);
+    moon.scale.setTo(1.5);
     game.physics.enable(moon, Phaser.Physics.ARCADE);
-    moon.body.setCircle(200, 70, 70);
-    flag = game.add.sprite(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 0.5 * CONFIGS.planetDistance, 'flag');
+    moon.body.setCircle(150, 50, 50);
+    
+    // flag
+    flag = game.add.sprite(moon.x, moon.y, 'flag');
     flag.anchor.set(0.5);
     flag.scale.set(0.5);
     flag.alpha = 0;
 
-    
     // ground
     ground = game.add.tileSprite(0, game.world.height - CONFIGS.groundHeight, game.world.width, CONFIGS.groundHeight, 'ground');
     game.physics.enable(ground, Phaser.Physics.ARCADE);
@@ -113,7 +120,7 @@ function create() {
     // asteroids
     asteroids = game.add.group();
     asteroids.enableBody = true;
-    for (let i = 0; i < 100; i++ ) {
+    for (let i = 0; i < 200; i++ ) {
         let asteroid = asteroids.create( game.world.randomX, game.world.randomY - (CONFIGS.skyHeight + 100), 'asteroid' );
         let size = 0.5 + Math.random();
         asteroid.body.setCircle(25, 51, 51);
@@ -153,20 +160,29 @@ function create() {
 
     // text
     const timerStyle = {
-        font: '32px Arial', 
-        //backgroundColor: 'rgba(0, 0, 0, 0.7)'
+        font: '30px Arial', 
         fill: '#ff007b',
     };
     timer = game.add.text(10, 25, 'Time: ', timerStyle);
     timer.fixedToCamera = true;
     timer.started = false;
+
+    const reachStyle = {
+        font: '20px Arial', 
+        //backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        fill: 'red',
+    };
+    reachMoon = game.add.text(630, 530, 'reach the moon', reachStyle);
+    reachMoon.fixedToCamera = true;
+    reachEarth = game.add.text(630, 570, 'get back to Earth', reachStyle);
+    reachEarth.fixedToCamera = true;
 }
 
 function update() {
 
     // animations
     clouds.x += CONFIGS.cloudsSpeed;
-    if (clouds.x > 1000 || clouds.x < -1000) {
+    if (clouds.x > 1000 || clouds.x < 0) {
         CONFIGS.cloudsSpeed = - CONFIGS.cloudsSpeed;
     }
 
@@ -233,17 +249,18 @@ function destroyAsteroid(rocket, asteroid) {
 function setFlag() {
     if (rocket.reachedMoon === false) {
         setFlagSound.play();
-        console.log('reached moon');
         rocket.reachedMoon = true;
         flag.alpha = 1;
+        reachMoon.addColor('green', 0);
+        rocket.reachedMoon = true;
     }
 }
 
 function render() {
-    // game.debug.body(rocket);
-    // game.debug.body(moon);
-    // asteroids.children.forEach( asteroid => game.debug.body(asteroid));
-    // fuelCans.children.forEach( fuelCan => game.debug.body(fuelCan));
+    game.debug.body(rocket);
+    game.debug.body(moon);
+    asteroids.children.forEach( asteroid => game.debug.body(asteroid));
+    fuelCans.children.forEach( fuelCan => game.debug.body(fuelCan));
 }
 
 class FuelBar extends Phaser.Group {
