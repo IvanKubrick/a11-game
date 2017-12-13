@@ -14,9 +14,9 @@ const gameField = document.querySelector('.game-field');
 const game = new Phaser.Game(800, 600, Phaser.AUTO, gameField, {preload: preload, create: create, update: update, render: render});
 
 function preload() {
-    game.load.audio('accelerationSound', 'assets/audio/acceleration.wav');
     game.load.audio('explosionSound', 'assets/audio/explosion.mp3');
     game.load.audio('fuelCollectionSound', 'assets/audio/fuelCollection.mp3');
+    game.load.audio('setFlagSound', 'assets/audio/setFlag.wav');
 
     game.load.image('sky', 'assets/img/sky.jpg');
     game.load.image('space', 'assets/img/space.jpg');
@@ -26,6 +26,7 @@ function preload() {
     game.load.image('fuelBar', 'assets/img/fuelBar.png');
     game.load.spritesheet('fuelCan', 'assets/img/fuelCan-spritesheet.png', 35, 40);
     game.load.image('clouds', 'assets/img/clouds.png');
+    game.load.image('flag', 'assets/img/flag.png');
 
     game.load.image('mercury', 'assets/img/planets/1-mercury.png');
     game.load.image('venus', 'assets/img/planets/2-venus.png');
@@ -46,10 +47,13 @@ let fuelBar;
 let fuelCans;
 let asteroids;
 let clouds;
+let timer;
+let moon;
+let flag;
 
-let accelerationSound;
 let fuelCollectionSound;
 let explosionSound;
+let setFlagSound;
 
 
 function create() {
@@ -71,7 +75,17 @@ function create() {
     game.add.sprite(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 8 * CONFIGS.planetDistance, 'neptune');
     game.add.sprite(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 9 * CONFIGS.planetDistance, 'pluto');
     game.add.sprite(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 10 * CONFIGS.planetDistance, 'sun');
-    game.add.sprite(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 11 * CONFIGS.planetDistance, 'moon');
+    
+    moon = game.add.sprite(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 0.5 * CONFIGS.planetDistance, 'moon');
+    moon.anchor.set(0.5);
+    //moon.scale.setTo(1.5);
+    game.physics.enable(moon, Phaser.Physics.ARCADE);
+    moon.body.setCircle(200, 70, 70);
+    flag = game.add.sprite(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 0.5 * CONFIGS.planetDistance, 'flag');
+    flag.anchor.set(0.5);
+    flag.scale.set(0.5);
+    flag.alpha = 0;
+
     
     // ground
     ground = game.add.tileSprite(0, game.world.height - CONFIGS.groundHeight, game.world.width, CONFIGS.groundHeight, 'ground');
@@ -88,6 +102,7 @@ function create() {
     rocket.body.collideWorldBounds = true;
     rocket.body.setCircle(10, 15, 15);
     rocket.animations.add('rotation', makeArray(16), 12, true);
+    rocket.reachedMoon = false;
     
     // controls
     cursors = game.input.keyboard.createCursorKeys();
@@ -134,13 +149,22 @@ function create() {
     // sounds
     fuelCollectionSound = game.add.audio('fuelCollectionSound');
     explosionSound = game.add.audio('explosionSound');
-    accelerationSound = game.add.audio('accelerationSound');
+    setFlagSound = game.add.audio('setFlagSound');
+
+    // text
+    const timerStyle = {
+        font: '32px Arial', 
+        //backgroundColor: 'rgba(0, 0, 0, 0.7)'
+        fill: '#ff007b',
+    };
+    timer = game.add.text(10, 25, 'Time: ', timerStyle);
+    timer.fixedToCamera = true;
+    timer.started = false;
 }
 
 function update() {
 
     // animations
-    console.log(clouds.x);
     clouds.x += CONFIGS.cloudsSpeed;
     if (clouds.x > 1000 || clouds.x < -1000) {
         CONFIGS.cloudsSpeed = - CONFIGS.cloudsSpeed;
@@ -160,9 +184,9 @@ function update() {
 
     if (fuelBar.fuelAmount > 0) {
         if (cursors.up.isDown) {
+            timer.started = true;
             game.physics.arcade.accelerationFromRotation(rocket.rotation, 150, rocket.body.acceleration);
             fuelBar.decreaseFuel(0.2);
-            //accelerationSound.play('', 0, 1);
         }
     }
 
@@ -179,7 +203,15 @@ function update() {
     // overlapping
     game.physics.arcade.overlap(rocket, fuelCans, collectFuel, null, this);
     game.physics.arcade.overlap(rocket, asteroids, destroyAsteroid, null, this);
+    game.physics.arcade.overlap(rocket, moon, setFlag, null, this);
+
+    // text
+    if (timer.started === true) {
+        timer.text = 'Time: ' + Math.floor(game.time.now / 1000);
+    }
 }
+
+
 
 function collectFuel(rocket, fuelCan) {
     fuelCollectionSound.play('', 0, 0.3);
@@ -198,9 +230,18 @@ function destroyAsteroid(rocket, asteroid) {
         asteroid.destroy();
     }, 700); 
 }
+function setFlag() {
+    if (rocket.reachedMoon === false) {
+        setFlagSound.play();
+        console.log('reached moon');
+        rocket.reachedMoon = true;
+        flag.alpha = 1;
+    }
+}
 
 function render() {
     // game.debug.body(rocket);
+    // game.debug.body(moon);
     // asteroids.children.forEach( asteroid => game.debug.body(asteroid));
     // fuelCans.children.forEach( fuelCan => game.debug.body(fuelCan));
 }
