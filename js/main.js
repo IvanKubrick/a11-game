@@ -48,15 +48,16 @@ let fuelBar;
 let fuelCans;
 let asteroids;
 let clouds;
-let timer;
 let reachMoon;
 let reachEarth;
 let moon;
 let flag;
+let timer;
 
 let fuelCollectionSound;
 let explosionSound;
 let setFlagSound;
+
 
 
 function create() {
@@ -79,7 +80,7 @@ function create() {
     planets.create(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 8 * CONFIGS.planetDistance, 'neptune');
     planets.create(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 9 * CONFIGS.planetDistance, 'pluto');
     planets.create(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 10 * CONFIGS.planetDistance, 'sun');
-    //planets.scale.setTo(2, 2);
+    planets.scale.set(2, 2);
     
     // moon
     moon = game.add.sprite(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 11 * CONFIGS.planetDistance, 'moon');
@@ -158,18 +159,18 @@ function create() {
     explosionSound = game.add.audio('explosionSound');
     setFlagSound = game.add.audio('setFlagSound');
 
-    // text
+    // timer
     const timerStyle = {
-        font: '30px Arial', 
+        font: '20px Arial', 
         fill: '#ff007b',
     };
-    timer = game.add.text(10, 25, 'Time: ', timerStyle);
+    timer = game.add.text(5, 20, 'Time: ', timerStyle);
+    timer.startTime = -1;
     timer.fixedToCamera = true;
-    timer.started = false;
 
+    // tasks
     const reachStyle = {
-        font: '20px Arial', 
-        //backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        font: '20px Arial',
         fill: 'red',
     };
     reachMoon = game.add.text(630, 530, 'reach the moon', reachStyle);
@@ -200,9 +201,12 @@ function update() {
 
     if (fuelBar.fuelAmount > 0) {
         if (cursors.up.isDown) {
-            timer.started = true;
             game.physics.arcade.accelerationFromRotation(rocket.rotation, 150, rocket.body.acceleration);
             fuelBar.decreaseFuel(0.2);
+
+            if (timer.startTime < 0) {
+                timer.startTime = Math.floor(game.time.now);
+            }
         }
     }
 
@@ -221,9 +225,15 @@ function update() {
     game.physics.arcade.overlap(rocket, asteroids, destroyAsteroid, null, this);
     game.physics.arcade.overlap(rocket, moon, setFlag, null, this);
 
-    // text
-    if (timer.started === true) {
-        timer.text = 'Time: ' + Math.floor(game.time.now / 1000);
+    // timer
+    let currentTime = Math.floor(game.time.now) - timer.startTime;
+    let ms = currentTime % 1000;
+    let s = Math.floor(currentTime / 1000);
+    let m = Math.floor(s / 60);
+    s = s % 60;
+
+    if (timer.startTime > 0) {
+        timer.text = `Time: ${m}m ${s}s ${ms}ms`;
     }
 }
 
@@ -257,10 +267,10 @@ function setFlag() {
 }
 
 function render() {
-    game.debug.body(rocket);
-    game.debug.body(moon);
-    asteroids.children.forEach( asteroid => game.debug.body(asteroid));
-    fuelCans.children.forEach( fuelCan => game.debug.body(fuelCan));
+    // game.debug.body(rocket);
+    // game.debug.body(moon);
+    // asteroids.children.forEach( asteroid => game.debug.body(asteroid));
+    // fuelCans.children.forEach( fuelCan => game.debug.body(fuelCan));
 }
 
 class FuelBar extends Phaser.Group {
