@@ -7,7 +7,7 @@ const CONFIGS = {
     rocketMaxVelocity: 300,
     fuelIncreaseAmount: 10,
     cloudsSpeed: 0.4,
-    asteroidsSpeed: 150
+    asteroidsAverageSpeed: 100
 };
 
 const gameField = document.querySelector('.game-field');
@@ -135,6 +135,7 @@ function create() {
         asteroid.animations.add('explosion', [48, 49, 50, 51, 52, 53, 54, 55, 56, 57], 8, false);
         asteroid.animations.play('rotation');
         asteroid.randomRotation = Math.random() * 2 * Math.PI;
+        asteroid.randomSpeed = CONFIGS.asteroidsAverageSpeed * ( Math.random() + 1 );
     }
 
     // fuel cans
@@ -233,7 +234,7 @@ function update() {
 
     // asteroids movement
     asteroids.children.forEach(asteroid => {
-        game.physics.arcade.velocityFromRotation( asteroid.randomRotation, CONFIGS.asteroidsSpeed, asteroid.body.velocity );
+        game.physics.arcade.velocityFromRotation( asteroid.randomRotation, asteroid.randomSpeed, asteroid.body.velocity );
 
         if (asteroid.x < -asteroid.width) {
             asteroid.x = CONFIGS.mapWidth;
@@ -282,7 +283,7 @@ function destroyAsteroid(rocket, asteroid) {
         asteroid.destroyed = true;
         game.physics.arcade.velocityFromRotation( rocket.rotation, rocket.body.velocity.getMagnitude() * 0.8, rocket.body.velocity );
     } 
-    
+
     asteroid.animations.play('explosion');
     setTimeout(() => {
         asteroid.destroy();
