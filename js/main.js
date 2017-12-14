@@ -4,7 +4,7 @@ const CONFIGS = {
     mapHeight: 12000,
     skyHeight: 1000,
     groundHeight: 50,
-    rocketMaxVelocity: 300,
+    rocketMaxVelocity: 3000,
     fuelIncreaseAmount: 10,
     cloudsSpeed: 0.4,
     asteroidsAverageSpeed: 50,
@@ -52,11 +52,14 @@ let fuelBar;
 let fuelCans;
 let asteroids;
 let clouds;
-let reachMoon;
-let reachEarth;
 let moon;
 let flag;
+
 let timer;
+let reachMoonText;
+let reachEarthText;
+let winText;
+let gameOverText
 
 let fuelCollectionSound;
 let explosionSound;
@@ -130,7 +133,7 @@ function create() {
     fuelCans = game.add.group();
     fuelCans.enableBody = true;
     for (let i = 0; i < 300; i++ ) {
-        let fuelCan = fuelCans.create( game.world.randomX, game.world.randomY - 100, 'fuelCan' );
+        let fuelCan = fuelCans.create( game.world.randomX, game.world.randomY - 300, 'fuelCan' );
         fuelCan.body.setSize(46, 58, -9, -9);
         fuelCan.animations.add('rotation', [0, 1, 2, 3, 4, 5, 6, 7, 8, 7, 6, 5, 4, 3, 2, 1], 16, true);
         fuelCan.animations.play('rotation');
@@ -174,7 +177,7 @@ function create() {
     // timer
     const timerStyle = {
         font: '20px Arial', 
-        fill: '#ff007b',
+        fill: '#ff007b'
     };
     timer = game.add.text(5, 20, 'Time: ', timerStyle);
     timer.startTime = -1;
@@ -183,21 +186,41 @@ function create() {
     // tasks
     const reachStyle = {
         font: '20px Arial',
-        fill: 'red',
+        fill: 'red'
     };
-    reachMoon = game.add.text(630, 530, 'reach the moon', reachStyle);
-    reachMoon.fixedToCamera = true;
-    reachEarth = game.add.text(630, 570, 'get back to Earth', reachStyle);
-    reachEarth.fixedToCamera = true;
+    reachMoonText = game.add.text(630, 530, 'reach the moon', reachStyle);
+    reachMoonText.fixedToCamera = true;
+    reachEarthText = game.add.text(630, 570, 'get back to Earth', reachStyle);
+    reachEarthText.fixedToCamera = true;
+
+    // game over text
+    const tableStyle = {
+        font: '50px Arial',
+        fontWeight: 'bold',
+        fill: '#000',
+        backgroundColor: 'rgba(255, 255, 255, 0.5)',
+        align: 'center'
+    };
+    gameOverText = game.add.text(game.width / 2, game.height / 2, 'GAME OVER', tableStyle);
+    gameOverText.anchor.set(0.5);
+    gameOverText.fixedToCamera = true;
+    gameOverText.alpha = 0;
+
+    // win text
+    winText = game.add.text(game.width / 2, game.height / 2, `You win.`, tableStyle);
+    winText.anchor.set(0.5);
+    winText.fixedToCamera = true;
+    winText.alpha = 0;
 }
 
 function update() {
-    // animations
+    // clouds animation
     clouds.x += CONFIGS.cloudsSpeed;
     if (clouds.x > 1000 || clouds.x < 0) {
         CONFIGS.cloudsSpeed = - CONFIGS.cloudsSpeed;
     }
 
+    // rocket animation
     rocket.animations.play('rotation');
     if (rocket.body.velocity.getMagnitude() < 50) {
         rocket.animations.stop('rotation');
@@ -205,11 +228,12 @@ function update() {
 
     // collision with the ground
     let collisionWithGround = game.physics.arcade.collide(rocket, ground);
-    if (collisionWithGround) {
-        if (rocket.reachedMoon === true && rocket.gotBack === false) {
-            endingSound.play();
-            reachEarth.addColor('green', 0);
-            rocket.gotBack = true;
+    
+    // space entering
+    if (rocket.y < CONFIGS.mapHeight - CONFIGS.skyHeight) {
+        if (rocket.wentIntoSpace === false) {
+            openingSound.play('', 0, 0.7);
+            rocket.wentIntoSpace = true;    
         }
     }
 
@@ -261,14 +285,6 @@ function update() {
     game.physics.arcade.overlap(rocket, asteroids, destroyAsteroid, null, this);
     game.physics.arcade.overlap(rocket, moon, setFlag, null, this);
 
-    if (rocket.y < CONFIGS.mapHeight - CONFIGS.skyHeight) {
-        if (rocket.wentIntoSpace === false) {
-            openingSound.play();
-            rocket.wentIntoSpace = true;
-        }
-    }
-    
-
     // timer
     let currentTime = Math.floor(game.time.now) - timer.startTime;
     let ms = currentTime % 1000;
@@ -279,9 +295,25 @@ function update() {
     if (timer.startTime > 0) {
         timer.text = `Time: ${m}m ${s}s ${ms}ms`;
     }
+
+    // game over 
+    if(rocket.body.velocity.getMagnitude() === 0 && fuelBar.fuelAmount === 0) {
+        gameOverText.alpha = 1;
+    }
+
+    // win
+    if (collisionWithGround) {
+        if (rocket.reachedMoon === true && rocket.gotBack === false) {
+            endingSound.play('', 0, 0.7);
+            reachEarthText.addColor('green', 0);
+            rocket.gotBack = true;
+
+            timer.alpha = 0;
+            winText.text = `You win. \n${timer.text}`;
+            winText.alpha = 1;
+        }
+    }
 }
-
-
 
 function collectFuel(rocket, fuelCan) {
     fuelCollectionSound.play('', 0, 0.3);
@@ -309,7 +341,7 @@ function setFlag() {
         setFlagSound.play();
         rocket.reachedMoon = true;
         flag.alpha = 1;
-        reachMoon.addColor('green', 0);
+        reachMoonText.addColor('green', 0);
         rocket.reachedMoon = true;
     }
 }
