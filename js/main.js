@@ -6,7 +6,8 @@ const CONFIGS = {
     groundHeight: 50,
     rocketMaxVelocity: 300,
     fuelIncreaseAmount: 10,
-    cloudsSpeed: 0.4
+    cloudsSpeed: 0.4,
+    asteroidsSpeed: 150
 };
 
 const gameField = document.querySelector('.game-field');
@@ -127,12 +128,13 @@ function create() {
         let asteroid = asteroids.create( game.world.randomX, game.world.randomY - (CONFIGS.skyHeight + 100), 'asteroid' );
         let size = 0.5 + Math.random();
         asteroid.body.setCircle(25, 51, 51);
+        asteroid.anchor.set(0.5);
         asteroid.scale.setTo(size);
         asteroid.destroyed = false;
         asteroid.animations.add('rotation', makeArray(48), 8, true);
         asteroid.animations.add('explosion', [48, 49, 50, 51, 52, 53, 54, 55, 56, 57], 8, false);
         asteroid.animations.play('rotation');
-        //asteroid.body.gravity.y = 10;
+        asteroid.randomRotation = Math.random() * 2 * Math.PI;
     }
 
     // fuel cans
@@ -183,7 +185,6 @@ function create() {
 }
 
 function update() {
-
     // animations
     clouds.x += CONFIGS.cloudsSpeed;
     if (clouds.x > 1000 || clouds.x < 0) {
@@ -229,6 +230,24 @@ function update() {
     }
 
     game.physics.arcade.velocityFromRotation( rocket.rotation, rocket.body.velocity.getMagnitude(), rocket.body.velocity );
+
+    // asteroids movement
+    asteroids.children.forEach(asteroid => {
+        game.physics.arcade.velocityFromRotation( asteroid.randomRotation, CONFIGS.asteroidsSpeed, asteroid.body.velocity );
+
+        if (asteroid.x < -asteroid.width) {
+            asteroid.x = CONFIGS.mapWidth;
+        }
+        if (asteroid.x > CONFIGS.mapWidth + asteroid.width) {
+            asteroid.x = 0;
+        }
+        if (asteroid.y > CONFIGS.mapHeight - CONFIGS.skyHeight) {
+            asteroid.y = 0;
+        }
+        if (asteroid.y < -asteroid.height) {
+            asteroid.y = CONFIGS.mapHeight - CONFIGS.skyHeight;
+        }
+    });
 
     // overlapping
     game.physics.arcade.overlap(rocket, fuelCans, collectFuel, null, this);
