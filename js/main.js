@@ -7,7 +7,7 @@ const CONFIGS = {
     rocketMaxVelocity: 300,
     fuelIncreaseAmount: 10,
     cloudsSpeed: 0.4,
-    asteroidsAverageSpeed: 100
+    asteroidsAverageSpeed: 50
 };
 
 const gameField = document.querySelector('.game-field');
@@ -121,6 +121,16 @@ function create() {
     // camera following
     game.camera.follow(rocket);
 
+    // fuel cans
+    fuelCans = game.add.group();
+    fuelCans.enableBody = true;
+    for (let i = 0; i < 300; i++ ) {
+        let fuelCan = fuelCans.create( game.world.randomX, game.world.randomY - 100, 'fuelCan' );
+        fuelCan.body.setSize(46, 58, -9, -9);
+        fuelCan.animations.add('rotation', [0, 1, 2, 3, 4, 5, 6, 7, 8, 7, 6, 5, 4, 3, 2, 1], 10, true);
+        fuelCan.animations.play('rotation');
+    }
+
     // asteroids
     asteroids = game.add.group();
     asteroids.enableBody = true;
@@ -136,16 +146,6 @@ function create() {
         asteroid.animations.play('rotation');
         asteroid.randomRotation = Math.random() * 2 * Math.PI;
         asteroid.randomSpeed = CONFIGS.asteroidsAverageSpeed * ( Math.random() + 1 );
-    }
-
-    // fuel cans
-    fuelCans = game.add.group();
-    fuelCans.enableBody = true;
-    for (let i = 0; i < 300; i++ ) {
-        let fuelCan = fuelCans.create( game.world.randomX, game.world.randomY - 100, 'fuelCan' );
-        fuelCan.body.setSize(46, 58, -9, -9);
-        fuelCan.animations.add('rotation', [0, 1, 2, 3, 4, 5, 6, 7, 8, 7, 6, 5, 4, 3, 2, 1], 10, true);
-        fuelCan.animations.play('rotation');
     }
 
     // clouds
