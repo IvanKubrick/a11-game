@@ -112,7 +112,7 @@ function create() {
     rocket.angle = -90;
     rocket.body.collideWorldBounds = true;
     rocket.body.setCircle(10, 15, 15);
-    rocket.animations.add('rotation', makeArray(16), 12, true);
+    rocket.animations.add('rotation', makeArray(16), 20, true);
     rocket.reachedMoon = false;
     rocket.gotBack = false;
     
@@ -128,7 +128,7 @@ function create() {
     for (let i = 0; i < 300; i++ ) {
         let fuelCan = fuelCans.create( game.world.randomX, game.world.randomY - 100, 'fuelCan' );
         fuelCan.body.setSize(46, 58, -9, -9);
-        fuelCan.animations.add('rotation', [0, 1, 2, 3, 4, 5, 6, 7, 8, 7, 6, 5, 4, 3, 2, 1], 10, true);
+        fuelCan.animations.add('rotation', [0, 1, 2, 3, 4, 5, 6, 7, 8, 7, 6, 5, 4, 3, 2, 1], 16, true);
         fuelCan.animations.play('rotation');
     }
 
@@ -142,8 +142,8 @@ function create() {
         asteroid.anchor.set(0.5);
         asteroid.scale.setTo(size);
         asteroid.destroyed = false;
-        asteroid.animations.add('rotation', makeArray(48), 8, true);
-        asteroid.animations.add('explosion', [48, 49, 50, 51, 52, 53, 54, 55, 56, 57], 8, false);
+        asteroid.animations.add('rotation', makeArray(48), 12, true);
+        asteroid.animations.add('explosion', [49, 50, 51, 52, 53, 54, 55, 56, 57], 12, false);
         asteroid.animations.play('rotation');
         asteroid.randomRotation = Math.random() * 2 * Math.PI;
         asteroid.randomSpeed = CONFIGS.asteroidsAverageSpeed * ( Math.random() + 1 );
@@ -288,7 +288,7 @@ function destroyAsteroid(rocket, asteroid) {
     asteroid.animations.play('explosion');
     setTimeout(() => {
         asteroid.destroy();
-    }, 700); 
+    }, 1500); 
 }
 
 function setFlag() {
