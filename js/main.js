@@ -7,7 +7,8 @@ const CONFIGS = {
     rocketMaxVelocity: 300,
     fuelIncreaseAmount: 10,
     cloudsSpeed: 0.4,
-    asteroidsAverageSpeed: 50
+    asteroidsAverageSpeed: 50,
+    asteroidsAverageDamage: 20
 };
 
 const gameField = document.querySelector('.game-field');
@@ -279,7 +280,7 @@ function destroyAsteroid(rocket, asteroid) {
     explosionSound.play('', 0, 0.3);
 
     if (asteroid.destroyed === false) {
-        fuelBar.decreaseFuel(10);
+        fuelBar.decreaseFuel(CONFIGS.asteroidsAverageDamage * asteroid.scale.y);
         asteroid.destroyed = true;
         game.physics.arcade.velocityFromRotation( rocket.rotation, rocket.body.velocity.getMagnitude() * 0.8, rocket.body.velocity );
     } 
