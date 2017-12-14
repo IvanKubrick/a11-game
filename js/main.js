@@ -16,10 +16,11 @@ const gameField = document.querySelector('.game-field');
 const game = new Phaser.Game(800, 600, Phaser.AUTO, gameField, {preload: preload, create: create, update: update, render: render});
 
 function preload() {
+    game.load.audio('openingSound', 'assets/audio/opening.mp3');
     game.load.audio('explosionSound', 'assets/audio/explosion.mp3');
     game.load.audio('fuelCollectionSound', 'assets/audio/fuelCollection.mp3');
     game.load.audio('setFlagSound', 'assets/audio/setFlag.wav');
-    game.load.audio('applauseSound', 'assets/audio/applause.mp3');
+    game.load.audio('endingSound', 'assets/audio/ending.mp3');
 
     game.load.image('sky', 'assets/img/sky.jpg');
     game.load.image('space', 'assets/img/space.jpg');
@@ -60,7 +61,8 @@ let timer;
 let fuelCollectionSound;
 let explosionSound;
 let setFlagSound;
-let applauseSound;
+let endingSound;
+let openingSound;
 
 
 
@@ -84,13 +86,14 @@ function create() {
     planets.create(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 8 * CONFIGS.planetDistance, 'neptune');
     planets.create(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 9 * CONFIGS.planetDistance, 'pluto');
     planets.create(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 10 * CONFIGS.planetDistance, 'sun');
-    
     // moon
-    moon = game.add.sprite(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 11 * CONFIGS.planetDistance, 'moon');
+    moon = planets.create(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 11 * CONFIGS.planetDistance, 'moon');
     moon.anchor.set(0.5);
     moon.scale.setTo(1.5);
     game.physics.enable(moon, Phaser.Physics.ARCADE);
     moon.body.setCircle(150, 50, 50);
+
+    planets.children.forEach( el => el.anchor.set(0.5) );
     
     // flag
     flag = game.add.sprite(moon.x, moon.y, 'flag');
@@ -113,6 +116,7 @@ function create() {
     rocket.body.collideWorldBounds = true;
     rocket.body.setCircle(10, 15, 15);
     rocket.animations.add('rotation', makeArray(16), 20, true);
+    rocket.wentIntoSpace = false;
     rocket.reachedMoon = false;
     rocket.gotBack = false;
     
@@ -161,10 +165,11 @@ function create() {
     fuelBar.fixedToCamera = true;
 
     // sounds
+    openingSound = game.add.audio('openingSound');
     fuelCollectionSound = game.add.audio('fuelCollectionSound');
     explosionSound = game.add.audio('explosionSound');
     setFlagSound = game.add.audio('setFlagSound');
-    applauseSound = game.add.audio('applauseSound');
+    endingSound = game.add.audio('endingSound');
 
     // timer
     const timerStyle = {
@@ -202,7 +207,7 @@ function update() {
     let collisionWithGround = game.physics.arcade.collide(rocket, ground);
     if (collisionWithGround) {
         if (rocket.reachedMoon === true && rocket.gotBack === false) {
-            applauseSound.play('', 0, 0.3);
+            endingSound.play();
             reachEarth.addColor('green', 0);
             rocket.gotBack = true;
         }
@@ -255,6 +260,14 @@ function update() {
     game.physics.arcade.overlap(rocket, fuelCans, collectFuel, null, this);
     game.physics.arcade.overlap(rocket, asteroids, destroyAsteroid, null, this);
     game.physics.arcade.overlap(rocket, moon, setFlag, null, this);
+
+    if (rocket.y < CONFIGS.mapHeight - CONFIGS.skyHeight) {
+        if (rocket.wentIntoSpace === false) {
+            openingSound.play();
+            rocket.wentIntoSpace = true;
+        }
+    }
+    
 
     // timer
     let currentTime = Math.floor(game.time.now) - timer.startTime;
