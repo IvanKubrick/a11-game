@@ -25,6 +25,7 @@ function preload() {
     game.load.image('sky', 'assets/img/sky.jpg');
     game.load.image('space', 'assets/img/space.jpg');
     game.load.image('ground', 'assets/img/ground.png');
+    game.load.image('screen', 'assets/img/screen.png');
     game.load.spritesheet('rocket', 'assets/img/rocket-spritesheet.png', 50, 50);
     game.load.spritesheet('asteroid', 'assets/img/asteroid-spritesheet.png', 150, 150);
     game.load.image('fuelBar', 'assets/img/fuelBar.png');
@@ -184,13 +185,17 @@ function create() {
     timer.fixedToCamera = true;
 
     // tasks
+    let screen = game.add.sprite(792, 592, 'screen');
+    screen.anchor.set(1);
+    screen.fixedToCamera = true;
+
     const reachStyle = {
         font: '20px Arial',
         fill: 'red'
     };
-    reachMoonText = game.add.text(630, 530, 'reach the moon', reachStyle);
+    reachMoonText = game.add.text(620, 510, 'reach the moon', reachStyle);
     reachMoonText.fixedToCamera = true;
-    reachEarthText = game.add.text(630, 570, 'get back to Earth', reachStyle);
+    reachEarthText = game.add.text(620, 550, 'get back to Earth', reachStyle);
     reachEarthText.fixedToCamera = true;
 
     // game over text
