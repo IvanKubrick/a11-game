@@ -4,11 +4,11 @@ const CONFIGS = {
     mapHeight: 12000,
     skyHeight: 1000,
     groundHeight: 50,
-    rocketMaxVelocity: 3000,
+    rocketMaxVelocity: 300,
     fuelIncreaseAmount: 10,
     cloudsSpeed: 0.4,
     asteroidsAverageSpeed: 50,
-    asteroidsAverageDamage: 20
+    asteroidsAverageDamage: 0
 };
 
 const gameField = document.querySelector('.game-field');
@@ -32,6 +32,8 @@ function preload() {
     game.load.spritesheet('fuelCan', 'assets/img/fuelCan-spritesheet.png', 35, 40);
     game.load.image('clouds', 'assets/img/clouds.png');
     game.load.image('flag', 'assets/img/flag.png');
+    game.load.image('fuelTrail', 'assets/img/fuelTrail.png');
+
 
     game.load.image('mercury', 'assets/img/planets/1-mercury.png');
     game.load.image('venus', 'assets/img/planets/2-venus.png');
@@ -55,12 +57,13 @@ let asteroids;
 let clouds;
 let moon;
 let flag;
+let emitter;
 
 let timer;
 let reachMoonText;
 let reachEarthText;
 let winText;
-let gameOverText
+let gameOverText;
 
 let fuelCollectionSound;
 let explosionSound;
@@ -110,8 +113,16 @@ function create() {
     game.physics.enable(ground, Phaser.Physics.ARCADE);
     ground.body.immovable = true;
     
+    // emitter
+    emitter = game.add.emitter(game.world.centerX, game.world.centerY, 400);
+    emitter.makeParticles(['fuelTrail']);
+    let lifespan = 500;
+    emitter.setAlpha(0.8, 0, lifespan);
+    emitter.setScale(1, 0.3, 1, 0.3, lifespan);
+    emitter.start(false, lifespan, 0.01);
+
     // rocket
-    rocket = game.add.sprite(CONFIGS.mapWidth / 2, game.world.height - 75, 'rocket');
+    rocket = game.add.sprite(CONFIGS.mapWidth / 2, CONFIGS.mapHeight - 75, 'rocket');
     rocket.anchor.set(0.5);
     game.physics.enable(rocket, Phaser.Physics.ARCADE);
     rocket.body.drag.set(35);
@@ -155,6 +166,7 @@ function create() {
         asteroid.animations.play('rotation');
         asteroid.randomRotation = Math.random() * 2 * Math.PI;
         asteroid.randomSpeed = CONFIGS.asteroidsAverageSpeed * ( Math.random() + 1 );
+        game.physics.arcade.velocityFromRotation( asteroid.randomRotation, asteroid.randomSpeed, asteroid.body.velocity );
     }
 
     // clouds
@@ -216,6 +228,20 @@ function create() {
     winText.anchor.set(0.5);
     winText.fixedToCamera = true;
     winText.alpha = 0;
+
+    // easy-mode button
+    let easyModeButton = game.add.sprite(600, CONFIGS.mapHeight - 10, 'fuelBar');
+    easyModeButton.inputEnabled = true;
+    easyModeButton.events.onInputDown.add(turnOnEasyMode, this);
+    
+    function turnOnEasyMode() {
+        if (timer.startTime < 0 ){  
+            asteroids.setAll('body.velocity.x', 0);
+            asteroids.setAll('body.velocity.y', 0); 
+            rocket.body.maxVelocity.set(300);
+            easyModeButton.alpha = 0;
+        }
+    }
 }
 
 function update() {
@@ -269,8 +295,6 @@ function update() {
 
     // asteroids movement
     asteroids.children.forEach(asteroid => {
-        game.physics.arcade.velocityFromRotation( asteroid.randomRotation, asteroid.randomSpeed, asteroid.body.velocity );
-
         if (asteroid.x < -asteroid.width) {
             asteroid.x = CONFIGS.mapWidth;
         }
@@ -284,6 +308,14 @@ function update() {
             asteroid.y = CONFIGS.mapHeight - CONFIGS.skyHeight;
         }
     });
+
+    // emitter
+    let px = -rocket.body.velocity.x * 0.3;
+    let py = -rocket.body.velocity.y * 0.3;
+    emitter.minParticleSpeed.set(px, py);
+    emitter.maxParticleSpeed.set(px, py);
+    emitter.emitX = rocket.x;
+    emitter.emitY = rocket.y;
 
     // overlapping
     game.physics.arcade.overlap(rocket, fuelCans, collectFuel, null, this);
@@ -304,6 +336,7 @@ function update() {
     // game over 
     if(rocket.body.velocity.getMagnitude() === 0 && fuelBar.fuelAmount === 0) {
         gameOverText.alpha = 1;
+        game.input.keyboard.enabled = false;
     }
 
     // win
@@ -316,8 +349,10 @@ function update() {
             timer.alpha = 0;
             winText.text = `You win. \n${timer.text}`;
             winText.alpha = 1;
+            game.input.keyboard.enabled = false;
         }
     }
+
 }
 
 function collectFuel(rocket, fuelCan) {
