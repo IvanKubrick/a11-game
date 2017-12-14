@@ -273,18 +273,22 @@ function collectFuel(rocket, fuelCan) {
     fuelBar.increaseFuel();
     fuelCan.destroy();
 }
-function destroyAsteroid(rocket, asteroid) {
 
+function destroyAsteroid(rocket, asteroid) {
     explosionSound.play('', 0, 0.3);
+
     if (asteroid.destroyed === false) {
         fuelBar.decreaseFuel(10);
         asteroid.destroyed = true;
+        game.physics.arcade.velocityFromRotation( rocket.rotation, rocket.body.velocity.getMagnitude() * 0.8, rocket.body.velocity );
     } 
+    
     asteroid.animations.play('explosion');
     setTimeout(() => {
         asteroid.destroy();
     }, 700); 
 }
+
 function setFlag() {
     if (rocket.reachedMoon === false) {
         setFlagSound.play();
@@ -324,6 +328,7 @@ class FuelBar extends Phaser.Group {
         this.bar.scale.setTo(this.fuelAmount, 2);
     }  
 }
+
 function makeArray(n) {
     return Array(n).fill().map((el,i) => i);
 }
