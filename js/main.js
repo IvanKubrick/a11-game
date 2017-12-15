@@ -340,6 +340,7 @@ function update() {
     if(rocket.body.velocity.getMagnitude() === 0 && fuelBar.fuelAmount === 0 && rocket.gotBack === false) {
         gameOverText.alpha = 1;
         game.input.keyboard.enabled = false;
+        timer.alpha = 0;
     }
 
     // win
