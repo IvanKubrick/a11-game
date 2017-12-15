@@ -5,10 +5,13 @@ const CONFIGS = {
     skyHeight: 1000,
     groundHeight: 50,
     rocketMaxVelocity: 300,
+    rocketAcceleration: 150,
     fuelIncreaseAmount: 10,
     cloudsSpeed: 0.4,
     asteroidsAverageSpeed: 50,
-    asteroidsAverageDamage: 0
+    asteroidsAverageDamage: 10,
+    fuelCansAmount: 250,
+    asteroidsAmount: 250
 };
 
 const gameField = document.querySelector('.game-field');
@@ -118,7 +121,7 @@ function create() {
     emitter.makeParticles(['fuelTrail']);
     let lifespan = 500;
     emitter.setAlpha(0.8, 0, lifespan);
-    emitter.setScale(1, 0.3, 1, 0.3, lifespan);
+    emitter.setScale(0.8, 0.3, 0.8, 0.3, lifespan);
     emitter.start(false, lifespan, 0.01);
 
     // rocket
@@ -144,8 +147,8 @@ function create() {
     // fuel cans
     fuelCans = game.add.group();
     fuelCans.enableBody = true;
-    for (let i = 0; i < 300; i++ ) {
-        let fuelCan = fuelCans.create( game.world.randomX, game.world.randomY - 300, 'fuelCan' );
+    for (let i = 0; i < CONFIGS.fuelCansAmount; i++ ) {
+        let fuelCan = fuelCans.create( game.world.randomX, game.world.randomY - 150, 'fuelCan' );
         fuelCan.body.setSize(46, 58, -9, -9);
         fuelCan.animations.add('rotation', [0, 1, 2, 3, 4, 5, 6, 7, 8, 7, 6, 5, 4, 3, 2, 1], 16, true);
         fuelCan.animations.play('rotation');
@@ -154,7 +157,7 @@ function create() {
     // asteroids
     asteroids = game.add.group();
     asteroids.enableBody = true;
-    for (let i = 0; i < 200; i++ ) {
+    for (let i = 0; i < CONFIGS.asteroidsAmount; i++ ) {
         let asteroid = asteroids.create( game.world.randomX, game.world.randomY - (CONFIGS.skyHeight + 100), 'asteroid' );
         let size = 0.5 + Math.random();
         asteroid.body.setCircle(25, 51, 51);
@@ -190,7 +193,7 @@ function create() {
     // timer
     const timerStyle = {
         font: '20px Arial', 
-        fill: '#ff007b'
+        fill: '#b40000'
     };
     timer = game.add.text(5, 20, 'Time: ', timerStyle);
     timer.startTime = -1;
@@ -203,7 +206,7 @@ function create() {
 
     const reachStyle = {
         font: '20px Arial',
-        fill: 'red'
+        fill: '#b40000'
     };
     reachMoonText = game.add.text(620, 510, 'reach the moon', reachStyle);
     reachMoonText.fixedToCamera = true;
@@ -274,7 +277,7 @@ function update() {
 
     if (fuelBar.fuelAmount > 0) {
         if (cursors.up.isDown) {
-            game.physics.arcade.accelerationFromRotation(rocket.rotation, 150, rocket.body.acceleration);
+            game.physics.arcade.accelerationFromRotation(rocket.rotation, CONFIGS.rocketAcceleration, rocket.body.acceleration);
             fuelBar.decreaseFuel(0.2);
 
             if (timer.startTime < 0) {
@@ -334,7 +337,7 @@ function update() {
     }
 
     // game over 
-    if(rocket.body.velocity.getMagnitude() === 0 && fuelBar.fuelAmount === 0) {
+    if(rocket.body.velocity.getMagnitude() === 0 && fuelBar.fuelAmount === 0 && rocket.gotBack === false) {
         gameOverText.alpha = 1;
         game.input.keyboard.enabled = false;
     }
@@ -343,7 +346,7 @@ function update() {
     if (collisionWithGround) {
         if (rocket.reachedMoon === true && rocket.gotBack === false) {
             endingSound.play('', 0, 0.7);
-            reachEarthText.addColor('green', 0);
+            reachEarthText.addColor('#067906', 0);
             rocket.gotBack = true;
 
             timer.alpha = 0;
@@ -381,7 +384,7 @@ function setFlag() {
         setFlagSound.play();
         rocket.reachedMoon = true;
         flag.alpha = 1;
-        reachMoonText.addColor('green', 0);
+        reachMoonText.addColor('#067906', 0);
         rocket.reachedMoon = true;
     }
 }
